@@ -21,6 +21,7 @@ class Director {
         web.assignProject();
         mobile.assignProject();
         QA.assignProject();
+        debugger;
         QA.endDay();
         web.endDay();
         mobile.endDay();
@@ -116,7 +117,6 @@ class mobileDepartament extends Departement{
     assignProject(){
         super.assignProject();
         this.projects.forEach(item=>{
-            debugger;
             if(!item.inDevelopment && 0<item.complexity-1<=this.freeProgrammers){
                 item.helpProgrammer.push(...this.freeProgrammers.splice(0,item.complexity-1));
                 this.workProgremmers.push(...this.freeProgrammers.splice(0,item.complexity-1));
@@ -162,9 +162,19 @@ class Project{
     complete=false;
     norm=1;
     inDevelopment=false;
+    constructor(){}
+    newDayProject(){
+    }
+    // новый день для каждого проекта
+    set activeProgrammer(Programmer){
+    }
+    // назначение главного програмиста на проект
+}
+class webProject extends Project{
     helpProgrammer=[];
-    constructor(direction,complexity){
-        this.direction=direction;
+    direction='web';
+    constructor(complexity){
+        super(constructor);
         this.complexity=complexity;
         this.time=complexity+1;
     }
@@ -175,15 +185,37 @@ class Project{
     set activeProgrammer(Programmer){
         this.activeProgrammer=Programmer;
     }
-    // назначение главного програмиста на проект
+}
+class mobileProject extends Project{
+    helpProgrammer=[];
+    direction='mobile';
+    constructor(complexity){
+        super(constructor);
+        this.complexity=complexity;
+        this.time=complexity+1;
+    }
+    newDayProject(){
+        this.time-=this.norm;
+    }
+    // новый день для каждого проекта
+    set activeProgrammer(Programmer){
+        this.activeProgrammer=Programmer;
+    }
+}
+class MobileCreater{
+    create(complexity){
+        return new mobileProject(complexity);
+    }
+}
+class WebCreater{
+    create(complexity){
+        return new webProject(complexity);
+    }
 }
 class Programmer{
     experience=0;
     dayOutOfWork=0;
-
 }
-
-
 let director= new Director;
 let mobile = new mobileDepartament,
 web= new webDepartament,
@@ -192,10 +224,12 @@ QA= new QADepartament;
 function generationProjects(){
     let quantity= Math.floor(Math.random() * 4 );
     let projects= [];
+    let factiory;
     while(quantity+1){
-        let direction = (Math.floor(Math.random() * 2)==1)?'web':'mobile',
+        let direction = (Math.floor(Math.random() * 2)==1)
         complexity=(Math.floor(Math.random() * 3 + 1));
-        projects.push(new Project(direction,complexity));
+        factiory=(direction==0)? new WebCreater:new MobileCreater;
+        projects.push(factiory.create(complexity)); 
         quantity--; 
     }
     return  projects;
@@ -219,3 +253,4 @@ function work(days){
 }
 // главная функция
 console.log(work(12));
+// update  добавил фабрику для проектов ,сейчас она по большей части вообще не нужна , но это самое логичное место для ее использования, но больше она нигде по моему мнению не нужна , для других паттернов не вижу причин добавления вообще 
