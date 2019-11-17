@@ -4,14 +4,17 @@ function sortEx(a, b) {
     if (a.experience < b.experience) return -1;
   }
 class Director {
-    webProjects=[];
-    mobileProject=[];
-    completeProject=0;
-    layOffProgrammer=0;
-    recruitProgrammer=0;
     firstDay(){
         director.addNewProjects(generationProjects());
     }
+    constructor(){
+        this.mobileProject = [];
+        this.webProjects=[];
+        this.completeProject=0;
+        this.layOffProgrammer=0;
+        this.recruitProgrammer=0;
+    }
+    
     newDay(){
         director.recruitProgrammers(this.mobileProject,mobile);
         director.recruitProgrammers(this.webProjects,web);
@@ -21,7 +24,6 @@ class Director {
         web.assignProject();
         mobile.assignProject();
         QA.assignProject();
-        debugger;
         QA.endDay();
         web.endDay();
         mobile.endDay();
@@ -54,9 +56,11 @@ class Director {
     //наем програмистов в отделы
 }
 class Departement{
-    projects=[];
-    freeProgrammers=[];
-    workProgremmers=[];
+    constructor(){
+        this.projects=[];
+        this.freeProgrammers=[];
+        this.workProgremmers=[]
+    }
     checkCompleteProject(){
         this.projects.forEach((item,index)=>{
             if(item.time==1){
@@ -158,23 +162,23 @@ class QADepartament extends Departement{
     
 }
 class Project{
-    activeProgrammer=false;
-    complete=false;
-    norm=1;
-    inDevelopment=false;
-    constructor(){}
+    constructor(){
+        this.activeProgrammer=false;
+        this.complete=false;
+        this.norm=1;
+        this.inDevelopment=false;
+    }
     newDayProject(){
     }
     // новый день для каждого проекта
-    set activeProgrammer(Programmer){
-    }
-    // назначение главного програмиста на проект
+    
+    
 }
 class webProject extends Project{
-    helpProgrammer=[];
-    direction='web';
     constructor(complexity){
         super(constructor);
+        this.helpProgrammer=[];
+        this.direction='web';
         this.complexity=complexity;
         this.time=complexity+1;
     }
@@ -182,15 +186,13 @@ class webProject extends Project{
         this.time-=this.norm;
     }
     // новый день для каждого проекта
-    set activeProgrammer(Programmer){
-        this.activeProgrammer=Programmer;
-    }
+    
 }
 class mobileProject extends Project{
-    helpProgrammer=[];
-    direction='mobile';
     constructor(complexity){
-        super(constructor);
+        super(constructor)
+        this.helpProgrammer=[];
+        this.direction='mobile';
         this.complexity=complexity;
         this.time=complexity+1;
     }
@@ -198,9 +200,7 @@ class mobileProject extends Project{
         this.time-=this.norm;
     }
     // новый день для каждого проекта
-    set activeProgrammer(Programmer){
-        this.activeProgrammer=Programmer;
-    }
+    
 }
 class MobileCreater{
     create(complexity){
@@ -213,8 +213,10 @@ class WebCreater{
     }
 }
 class Programmer{
-    experience=0;
-    dayOutOfWork=0;
+    constructor(){
+        this.experience = 0;
+        this.dayOutOfWork= 0;
+    }
 }
 let director= new Director;
 let mobile = new mobileDepartament,
