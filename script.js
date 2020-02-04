@@ -4,20 +4,20 @@ function sortEx(a, b) {
     if (a.experience < b.experience) return -1;
   }
 class Director {
-    webProjects=[];
-    mobileProject=[];
-    QAProjects=[];
-    completeProject=0;
-    layOffProgrammer=0;
-    recruitProgrammer=0;
+    firstDay(){
+        this.addNewProjects(generationProjects());
+    }
     constructor(mobile,web,QA){
         this.mobile=mobile;
         this.web=web;
         this.QA=QA
+        this.mobileProject = [];
+        this.webProjects=[];
+        this.completeProject=0;
+        this.layOffProgrammer=0;
+        this.recruitProgrammer=0;
     }
-    firstDay(){
-        this.addNewProjects(generationProjects());
-    }
+    
     newDay(){
         this.recruitProgrammers(this.mobileProject,this.mobile);
         this.recruitProgrammers(this.webProjects,this.web);
@@ -181,30 +181,53 @@ class Project{
         this.time-=this.norm;
     }
     // новый день для каждого проекта
-    set activeProgrammer(Programmer){
-        this.activeProgrammer=Programmer;
+    
+}
+class mobileProject extends Project{
+    constructor(complexity){
+        super(constructor)
+        this.helpProgrammer=[];
+        this.direction='mobile';
+        this.complexity=complexity;
+        this.time=complexity+1;
     }
-    // назначение главного програмиста на проект
+    newDayProject(){
+        this.time-=this.norm;
+    }
+    // новый день для каждого проекта
+    
+}
+class MobileCreater{
+    create(complexity){
+        return new mobileProject(complexity);
+    }
+}
+class WebCreater{
+    create(complexity){
+        return new webProject(complexity);
+    }
 }
 class Programmer{
-    experience=0;
-    dayOutOfWork=0;
+    constructor(){
+        this.experience = 0;
+        this.dayOutOfWork= 0;
+    }
 }
+let director= new Director;
+let mobile = new mobileDepartament,
+web= new webDepartament,
+QA= new QADepartament;
 
-
-let director;
-let mobile = new mobileDepartament(director),
-web= new webDepartament(director),
-QA= new QADepartament(director);
-director= new Director(mobile,web,QA);
 
 function generationProjects(){
     let quantity= Math.floor(Math.random() * 4 );
     let projects= [];
+    let factiory;
     while(quantity+1){
-        let direction = (Math.floor(Math.random() * 2)==1)?'web':'mobile',
+        let direction = (Math.floor(Math.random() * 2)==1)
         complexity=(Math.floor(Math.random() * 3 + 1));
-        projects.push(new Project(direction,complexity));
+        factiory=(direction==0)? new WebCreater:new MobileCreater;
+        projects.push(factiory.create(complexity)); 
         quantity--; 
     }
     return  projects;
@@ -228,6 +251,5 @@ function work(days){
 }
 // главная функция
 console.log(work(1000));
-// this у директора, передача в конструктор департаментов и юз
-// передача выполн проектов обратно директору и передача им их в qa
-// eslint
+// update  добавил фабрику для проектов ,сейчас она по большей части вообще не нужна , но это самое логичное место для ее использования, но больше она нигде по моему мнению не нужна , для других паттернов не вижу причин добавления вообще 
+
