@@ -5,9 +5,12 @@ function sortEx(a, b) {
   }
 class Director {
     firstDay(){
-        director.addNewProjects(generationProjects());
+        this.addNewProjects(generationProjects());
     }
-    constructor(){
+    constructor(mobile,web,QA){
+        this.mobile=mobile;
+        this.web=web;
+        this.QA=QA
         this.mobileProject = [];
         this.webProjects=[];
         this.completeProject=0;
@@ -16,68 +19,74 @@ class Director {
     }
     
     newDay(){
-        director.recruitProgrammers(this.mobileProject,mobile);
-        director.recruitProgrammers(this.webProjects,web);
-        QA.recruitProgrammers();
-        director.addNewProjects(generationProjects());
-        director.transferProjectToDepartament();
-        web.assignProject();
-        mobile.assignProject();
-        QA.assignProject();
-        QA.endDay();
-        web.endDay();
-        mobile.endDay();
+        this.recruitProgrammers(this.mobileProject,this.mobile);
+        this.recruitProgrammers(this.webProjects,this.web);
+        this.recruitProgrammers(this.QAProjects,this.QA);
+        this.addNewProjects(generationProjects());
+        this.transferProjectToDepartament();
+        this.web.assignProject();
+        this.mobile.assignProject();
+        this.QA.assignProject();
+        this.QA.endDay();
+        this.web.endDay();
+        this.mobile.endDay();
     }
     //запуск событий нового дня
     addNewProjects(projects){
-        projects.forEach(element => {
-        if(element.direction==='web')
-            this.webProjects.push(element);
-        else if(element.direction==='mobile')
-            this.mobileProject.push(element);
+        projects.forEach(project => {
+        if(project.direction === 'web')
+            this.webProjects.push(project);
+        else if(project.direction==='mobile')
+            this.mobileProject.push(project);
         });
     }
     //получение директором проектов для компании 
     transferProjectToDepartament(){
-        web.addNewProjects(this.webProjects.splice(0,web.freeProgrammers.length));
-        mobile.addNewProjects(this.mobileProject.splice(0,mobile.freeProgrammers.length));
+        this.web.addNewProjects(this.webProjects.splice(0,web.freeProgrammers.length));
+        this.mobile.addNewProjects(this.mobileProject.splice(0,mobile.freeProgrammers.length));
+        this.QA.addNewProjects(this.QAProjects.splice(0,QA.freeProgrammers.length))
     }
     //перередача необходимого количества проектов в отделы
     recruitProgrammers(mass,departement){
         let programmers=[],
         i=mass.length;
-        while(i>departement.projects.length){
+        while(i > departement.freeProgrammers.length){
             programmers.push(new Programmer);
-            i--;
+            i--
         }
         this.recruitProgrammer+=programmers.length;
         departement.addProgrammers(programmers);
     }
-    //наем програмистов в отделы
+    returnCompleteProject(project){
+        this.QAProjects.push(project);
+    }
+    // upd
 }
 class Departement{
-    constructor(){
-        this.projects=[];
-        this.freeProgrammers=[];
-        this.workProgremmers=[]
+    projects=[];
+    freeProgrammers=[];
+    workProgrammers=[];
+    constructor(director){
+        this.director=director;
     }
     checkCompleteProject(){
-        this.projects.forEach((item,index)=>{
-            if(item.time==1){
-                item.activeProgrammer.experience++;
-                if(item.helpProgrammer.length!==0){
-                    item.helpProgrammer.forEach(item=>{item.experience++});
-                    this.freeProgrammers.push(...item.helpProgrammer);
-                    item.helpProgrammer=false;
+        this.projects.forEach((project,index)=>{
+            if(project.time <= 0){
+                project.activeProgrammer.experience++;
+                this.freeProgrammers.push(this.workProgrammers.splice(this.workProgrammers.indexOf(project.activeProgrammer),1)[0]);
+                if(project.helpProgrammers.length!==0){
+                    project.helpProgrammers.forEach(programer=>{programer.experience++});
+                    this.freeProgrammers.push(...project.helpProgrammers);
+                    project.helpProgrammers=false;
                 }
-                this.freeProgrammers.push(this.workProgremmers.splice(this.workProgremmers.indexOf(item.activeProgrammer),1)[0]);
-                item.activeProgrammer=false;
+                project.activeProgrammer=false;
                 this.projects.splice(index,1);
-                QA.addNewProjects(item);
+                director.returnCompleteProject(project);
             }
 
         })
     }
+    //  upd 
     //проверка на наличие выполненных проектов в конце дня
     addNewProjects(projects){
         this.projects.push(...projects);
@@ -88,15 +97,19 @@ class Departement{
     }
     // добавление программистов
     assignProject(){
-        this.projects.forEach(items=>{
-            if(items.activeProgrammer==false){
-                this.freeProgrammers[0].dayOutOfWork=0;
-                items.activeProgrammer=this.freeProgrammers[0];
-                this.workProgremmers.push(this.freeProgrammers.splice(0,1)[0]);
+        this.projects.forEach(project=>{
+            if(project.activeProgrammer==false){
+                if (!this.freeProgrammers.length) throw new Error('dep must have free devs')
+                this.setActiveProgrammerOnProject(project);
+                this.workProgrammers.push(this.freeProgrammers.shift());
             }
         })
     }
-    //распределение программистов на проекты
+    setActiveProgrammerOnProject(project){
+        this.freeProgrammers[0].dayOutOfWork=0;
+        project.activeProgrammer=this.freeProgrammers[0]; 
+    }
+    //распределение программистов на проекты  todo доставать первого через shift и отдельная функция для сброса дней и освобождению програмера upd странно ,но сразу я не могу достать шитом програмера и его уже использовать выдает ошибку 
     endDay(){
         this.layoff();
         this.projects.forEach(item=>{
@@ -108,8 +121,8 @@ class Departement{
     layoff(){
         let layoffList;
         this.freeProgrammers.forEach(item=>{item.dayOutOfWork++});
-        layoffList=this.freeProgrammers.filter(item=>{item.dayOutOfWork>=3}).sort(sortEx);
-        if(layoffList.length!==0){
+        layoffList=this.freeProgrammers.filter(item=>item.dayOutOfWork>=3).sort(sortEx);
+        if(layoffList.length){
             this.freeProgrammers.splice(this.freeProgrammers.indexOf(layoffList[0]),1);
             director.layOffProgrammer++;
         }
@@ -119,34 +132,27 @@ class Departement{
 }
 class mobileDepartament extends Departement{
     assignProject(){
+        let goHelpProgrammers=[];
         super.assignProject();
-        this.projects.forEach(item=>{
-            if(!item.inDevelopment && 0<item.complexity-1<=this.freeProgrammers){
-                item.helpProgrammer.push(...this.freeProgrammers.splice(0,item.complexity-1));
-                this.workProgremmers.push(...this.freeProgrammers.splice(0,item.complexity-1));
-                item.helpProgrammer.forEach(item=>{item.dayOutOfWork=0;});
-                item.norm=item.complexity;
+        this.projects.forEach(project=>{
+            goHelpProgrammers=[];
+            if(!project.inDevelopment && 1 < project.complexity && project.complexity <= this.freeProgrammers.length){
+                goHelpProgrammers.push(...this.freeProgrammers.splice(0,project.complexity-1));
+                project.helpProgrammers.push(...goHelpProgrammers);
+                //  todo  ошибка разные програмеры попадают в ворк и хелп upd
+                project.helpProgrammers.forEach(programmer=>{programmer.dayOutOfWork=0;});
+                project.norm=project.complexity;
             }
-            item.inDevelopment=true;
+            project.inDevelopment=true;
         })
     }
     // добавленние к методу для мобильного отдела , который позволяет при наличии свободных программистов после распределения проектов отправить их на уже занятые проекты в помощь
+    
 }
 class webDepartament extends Departement{
     
 }
 class QADepartament extends Departement{
-    addNewProjects(project){
-        this.projects.push(project);
-    }
-    //немного другой механизм добавления проектов для QA центра
-    recruitProgrammers(){
-        while (this.projects.length>this.freeProgrammers.length){
-            this.freeProgrammers.push(new Programmer);
-            director.recruitProgrammer++;
-        }
-    }
-    // ненмого другой механизм для наема рабочих по надобности
     endDay(){
             this.layoff();
             this.projects.forEach(item=>{
@@ -154,31 +160,20 @@ class QADepartament extends Departement{
             });
             director.completeProject+=this.projects.length;
             this.projects.splice(0,this.projects.length);
-            this.workProgremmers.forEach(item=>{item.experience++});
-            this.freeProgrammers=this.freeProgrammers.concat(this.workProgremmers);
-            this.workProgremmers.splice(0,this.workProgremmers.length);
-        }
-        // отдельное собыие конца дня с удалением проектов 
-    
+            this.workProgrammers.forEach(item=>{item.experience++});
+            this.freeProgrammers=this.freeProgrammers.concat(this.workProgrammers);
+            this.workProgrammers.splice(0,this.workProgrammers.length);
+        }  
 }
+// отдельное собыие конца дня с удалением проектов
 class Project{
-    constructor(){
-        this.activeProgrammer=false;
-        this.complete=false;
-        this.norm=1;
-        this.inDevelopment=false;
-    }
-    newDayProject(){
-    }
-    // новый день для каждого проекта
-    
-    
-}
-class webProject extends Project{
-    constructor(complexity){
-        super(constructor);
-        this.helpProgrammer=[];
-        this.direction='web';
+    activeProgrammer=false;
+    complete=false;
+    norm=1;
+    inDevelopment=false;
+    helpProgrammers=[];
+    constructor(direction,complexity){
+        this.direction=direction;
         this.complexity=complexity;
         this.time=complexity+1;
     }
@@ -223,6 +218,7 @@ let mobile = new mobileDepartament,
 web= new webDepartament,
 QA= new QADepartament;
 
+
 function generationProjects(){
     let quantity= Math.floor(Math.random() * 4 );
     let projects= [];
@@ -254,5 +250,6 @@ function work(days){
     }
 }
 // главная функция
-console.log(work(12));
+console.log(work(1000));
 // update  добавил фабрику для проектов ,сейчас она по большей части вообще не нужна , но это самое логичное место для ее использования, но больше она нигде по моему мнению не нужна , для других паттернов не вижу причин добавления вообще 
+
