@@ -1,6 +1,6 @@
 export default class Project {
   constructor(direction, complexity) {
-    this.activeProgrammer = false;
+    this.activeProgrammer = null;
     this.complete = false;
     this.norm = 1;
     this.inDevelopment = false;

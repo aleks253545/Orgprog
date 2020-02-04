@@ -11,22 +11,30 @@ export default class Department {
   }
 
   checkCompleteProject() {
+    let indexCompleteProjects = [];
     this.projects.forEach((project, index) => {
       if (project.time <= 0) {
         project.activeProgrammer.experience += 1;
         this.freeProgrammers.push(this.workProgrammers
           .splice(this.workProgrammers.indexOf(project.activeProgrammer), 1)[0]);
-        if (project.helpProgrammers.length !== 0) {
+        if (project.helpProgrammers.length) {
           project.helpProgrammers.forEach((programer) => { programer.experience += 1; });
           this.freeProgrammers.push(...project.helpProgrammers);
-          project.helpProgrammers = false;
+          project.helpProgrammers.splice(0, project.helpProgrammers.length);
         }
-        project.activeProgrammer = false;
+        project.activeProgrammer = null;
         this.completeOnThisDay.push(...this.projects.splice(index, 1));
+        indexCompleteProjects.push(index);
       }
     });
+    // this.setCompleteProject(indexCompleteProjects);
   }
-
+  // итерация todo
+  // setCompleteProject(indexCompleteProjects) {
+  //   indexCompleteProjects.forEach((projectIndex) => {
+  //     this.completeOnThisDay.push(this.projects.splice(projectIndex,1));
+  //   })
+  // }
   sendDayResults() {
     return this.completeOnThisDay.splice(0, this.completeOnThisDay.length);
   }
@@ -51,17 +59,18 @@ export default class Department {
 
   assignProject() {
     this.projects.forEach((project) => {
-      if (project.activeProgrammer === false) {
+      if (!project.activeProgrammer) {
         if (!this.freeProgrammers.length) throw new Error('dep must have free devs');
-        this.setActiveProgrammerOnProject(project);
-        this.workProgrammers.push(this.freeProgrammers.shift());
+        let firstFreeProgrammer = this.freeProgrammers.shift();
+        this.setActiveProgrammerOnProject(project, firstFreeProgrammer);
+        this.workProgrammers.push(firstFreeProgrammer);
       }
     });
   }
 
-  setActiveProgrammerOnProject(project) {
-    this.freeProgrammers[0].dayOutOfWork = 0;
-    project.activeProgrammer = this.freeProgrammers[0];
+  setActiveProgrammerOnProject(project, programer) {
+    programer.dayOutOfWork = 0;
+    project.activeProgrammer = programer;
   }
   // распределение программистов на проекты  todo доставать первого через
   // shift и отдельная функция для сброса дней
